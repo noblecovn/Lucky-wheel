@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Spin Wheel</title>
+	<link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+	<div class="container">
+		<div class="spin-btn"></div>
+		<div class="wheel" id="wheel">
+			<!-- Các phần tử sẽ được tạo bằng JavaScript -->
+		</div>
+	</div>
+	<script>
+		// Tạo các phần tử wheel
+		const wheel = document.getElementById('wheel');
+		const colors = ['#013817', '#B6CCBE', '#376048', '#E8E6E3'];
+		const percentages = [5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 20];
+
+		for (let i = 0; i < 30; i++) {
+			const number = document.createElement('div');
+			number.className = 'number';
+			number.style.setProperty('--i', i);
+			number.style.setProperty('--clr', colors[i % 4]);
+			number.innerHTML = `<span>${percentages[i]}%</span>`;
+			wheel.appendChild(number);
+		}
+		let spinBtn = document.querySelector('.spin-btn');
+		let value = Math.ceil(Math.random() * 3600);
+		let hasWon20Percent = false;
+		let spinCount = 0; // Đếm số lần quay
+		let winSpinNumber = 2; // Chỉ định lần quay sẽ trúng 20%
+
+		// Hàm xác định phần trăm trúng thưởng dựa trên góc
+		function getPrizePercentage(angle) {
+			// Chuẩn hóa góc về khoảng 0-360
+			angle = angle % 360;
+			
+			// Mảng lưu trữ các khoảng góc
+			const angleRanges = [
+				{ start: 0, end: 3 },    // 4
+				{ start: 4, end: 15 },   // 3
+				{ start: 16, end: 27 },  // 2
+				{ start: 28, end: 39 },  // 1
+				{ start: 40, end: 51 },  // 0
+				{ start: 52, end: 63 },  // 29
+				{ start: 64, end: 75 },  // 28
+				{ start: 76, end: 87 },  // 27
+				{ start: 88, end: 99 },  // 26
+				{ start: 100, end: 111 }, // 25
+				{ start: 112, end: 123 }, // 24
+				{ start: 124, end: 135 }, // 23
+				{ start: 136, end: 147 }, // 22
+				{ start: 148, end: 159 }, // 21
+				{ start: 160, end: 171 }, // 20
+				{ start: 172, end: 183 }, // 19
+				{ start: 184, end: 195 }, // 18
+				{ start: 196, end: 207 }, // 17
+				{ start: 208, end: 219 }, // 16
+				{ start: 220, end: 231 }, // 15
+				{ start: 232, end: 243 }, // 14
+				{ start: 244, end: 255 }, // 13
+				{ start: 256, end: 267 }, // 12
+				{ start: 268, end: 279 }, // 11
+				{ start: 280, end: 291 }, // 10
+				{ start: 292, end: 303 }, // 9
+				{ start: 304, end: 315 }, // 8
+				{ start: 316, end: 327 }, // 7
+				{ start: 328, end: 339 }, // 6
+				{ start: 340, end: 351 }, // 5
+				{ start: 352, end: 360 }  // 4
+			];
+
+			// Tìm khoảng góc phù hợp
+			const rangeIndex = angleRanges.findIndex(range => angle >= range.start && angle < range.end);
+			
+			// Nếu tìm thấy khoảng góc, lấy phần trăm tương ứng từ mảng percentages
+			if (rangeIndex !== -1) {
+				// Tính index trong mảng percentages (ngược lại)
+				const percentagesIndex = (4 - rangeIndex + 30) % 30;
+				return percentages[percentagesIndex];
+			}
+			
+			return 0;
+		}
+
+		// Hàm hiển thị popup
+		function showPopup(message) {
+			const popup = document.createElement('div');
+			popup.style.position = 'fixed';
+			popup.style.top = '50%';
+			popup.style.left = '50%';
+			popup.style.transform = 'translate(-50%, -50%)';
+			popup.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+			popup.style.color = 'white';
+			popup.style.padding = '20px';
+			popup.style.borderRadius = '10px';
+			popup.style.zIndex = '1000';
+			popup.style.textAlign = 'center';
+			popup.innerHTML = message;
+
+			document.body.appendChild(popup);
+
+			// Tự động đóng popup sau 3 giây
+			setTimeout(() => {
+				popup.remove();
+			}, 3000);
+		}
+
+		spinBtn.onclick = () => {
+			spinCount++; // Tăng số lần quay
+
+			if (spinCount === winSpinNumber) {
+				// Lần quay được chỉ định sẽ trúng 20%
+				value = Math.floor(Math.random() * (62 - 52 + 1)) + 52;
+				hasWon20Percent = true;
+			} else {
+				// Các lần quay khác sẽ không trúng 20%
+				let newValue;
+				do {
+					newValue = Math.ceil(Math.random() * 3600);
+					// Tính toán góc quay để tránh phần 20%
+					let finalAngle = (value + newValue) % 360;
+					// Phần 20% nằm ở góc 52-62 độ
+					if (finalAngle < 52 || finalAngle > 62) {
+						value = newValue;
+						break;
+					}
+				} while (true);
+			}
+
+			wheel.style.transform = `rotate(${value}deg)`;
+
+			// Hiển thị popup sau khi quay xong
+			setTimeout(() => {
+				const finalAngle = value % 360;
+				const prizePercentage = getPrizePercentage(finalAngle);
+				if (prizePercentage > 0) {
+					showPopup(`🎉 Chúc mừng! Bạn đã trúng ${prizePercentage}% 🎉`);
+				} else {
+					showPopup(`Vui lòng quay lại`);
+				}
+			}, 5000); // Đợi 3 giây để vòng quay dừng lại
+		};
+
+	</script>
+	<script src="./script.js"></script>
+</body>
+
+</html>
