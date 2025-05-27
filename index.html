@@ -182,7 +182,7 @@
 		// Tạo các phần tử wheel
 		const wheel = document.getElementById('wheel');
 		const colors = ['#013817', '#B6CCBE', '#376048', '#E8E6E3'];
-		const percentages = [5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 15, 5, 10, 20];
+		const percentages = [15, 10, 15, 20, 10, 15, 10, 15, 10, 15, 10, 15, 10, 15, 10, 15, 10, 15, 10, 15, 10, 15, 20, 15, 10, 15, 20, 15, 10, 25];
 
 		for (let i = 0; i < 30; i++) {
 			const number = document.createElement('div');
@@ -196,7 +196,7 @@
 		let value = Math.ceil(Math.random() * 3600);
 		let hasWon20Percent = false;
 		let spinCount = 0; // Đếm số lần quay
-		let winSpinNumber = 19; // Chỉ định lần quay sẽ trúng 20%
+		let winSpinNumber = 1; // Chỉ định lần quay sẽ trúng 20%
 		const ROTATION_CYCLES = 10; // Số vòng quay trước khi dừng
 		const DEGREES_PER_CYCLE = 360; // Số độ trong một vòng quay
 		let isSpinning = false; // Biến kiểm soát trạng thái quay
@@ -324,19 +324,27 @@
 			spinCount++; // Tăng số lần quay
 
 			if (spinCount === winSpinNumber) {
-				// Tìm vị trí của giá trị 20% trong mảng percentages
-				const indexOf20 = percentages.indexOf(20);
-				console.log('indexOf20', indexOf20);
-				// Chuyển đổi từ percentagesIndex sang rangeIndex
-				const rangeIndex = getRangeIndexFromPercentagesIndex(indexOf20);
-				// Tìm khoảng góc tương ứng
-				const rangeFor20 = angleRanges[rangeIndex];
-				console.log('rangeFor20', rangeFor20);
-				// Tạo góc ngẫu nhiên trong khoảng của phần tử 20%
-				const targetAngle = Math.floor(Math.random() * (rangeFor20.end - rangeFor20.start)) + rangeFor20.start;
+				// Tìm tất cả các index của giá trị 20%
+				const indexesOf20 = percentages.reduce((acc, value, index) => {
+					if (value === 20) acc.push(index);
+					return acc;
+				}, []);
+
+				// Lấy tất cả các khoảng góc tương ứng với các index của 20%
+				const rangesFor20 = indexesOf20.map(index => {
+					const rangeIndex = getRangeIndexFromPercentagesIndex(index);
+					return angleRanges[rangeIndex];
+				});
+
+				// Chọn ngẫu nhiên một trong các khoảng góc
+				const randomRange = rangesFor20[Math.floor(Math.random() * rangesFor20.length)];
+
+				// Tạo góc ngẫu nhiên trong khoảng đã chọn
+				const targetAngle = Math.floor(Math.random() * (randomRange.end - randomRange.start)) + randomRange.start;
+
 				// Thêm số vòng quay vào góc đích
 				value = (ROTATION_CYCLES * DEGREES_PER_CYCLE) + targetAngle;
-				console.log('Vị trí 20%:', indexOf20, 'Khoảng góc:', rangeFor20, 'Góc quay:', value);
+				console.log('Các vị trí 20%:', indexesOf20, 'Các khoảng góc:', rangesFor20, 'Khoảng được chọn:', randomRange, 'Góc quay:', value);
 				hasWon20Percent = true;
 			} else {
 				// Các lần quay khác sẽ không trúng 20%
@@ -346,18 +354,34 @@
 					const randomAngle = Math.ceil(Math.random() * 360);
 					// Thêm số vòng quay vào góc ngẫu nhiên
 					newValue = (ROTATION_CYCLES * DEGREES_PER_CYCLE) + randomAngle + value;
-					// Tính toán góc quay để tránh phần 20%
+					// Tính toán góc quay để tránh phần 20% và 25%
 					let finalAngle = (value + newValue) % 360;
-					// Tìm vị trí của giá trị 20% trong mảng percentages
-					const indexOf20 = percentages.indexOf(20);
-					// Chuyển đổi từ percentagesIndex sang rangeIndex
-					const rangeIndex = getRangeIndexFromPercentagesIndex(indexOf20);
-					// Tìm khoảng góc tương ứng
-					const rangeFor20 = angleRanges[rangeIndex];
-					// Kiểm tra xem có trúng vào phần 20% không
-					if (finalAngle < rangeFor20.start || finalAngle >= rangeFor20.end) {
+					
+					// Tìm tất cả các index của giá trị 20% và 25%
+					const indexesOf20 = percentages.reduce((acc, value, index) => {
+						if (value === 20) acc.push(index);
+						return acc;
+					}, []);
+					
+					const indexesOf25 = percentages.reduce((acc, value, index) => {
+						if (value === 25) acc.push(index);
+						return acc;
+					}, []);
+
+					// Lấy tất cả các khoảng góc tương ứng
+					const rangesToAvoid = [
+						...indexesOf20.map(index => angleRanges[getRangeIndexFromPercentagesIndex(index)]),
+						...indexesOf25.map(index => angleRanges[getRangeIndexFromPercentagesIndex(index)])
+					];
+
+					// Kiểm tra xem góc cuối có nằm trong bất kỳ khoảng cần tránh nào không
+					const isInAvoidRange = rangesToAvoid.some(range => 
+						finalAngle >= range.start && finalAngle < range.end
+					);
+
+					// Nếu không nằm trong khoảng cần tránh thì chấp nhận góc này
+					if (!isInAvoidRange) {
 						value = newValue;
-						console.log('newValue', newValue);
 						break;
 					}
 				} while (true);
