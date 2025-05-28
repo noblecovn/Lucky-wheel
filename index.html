@@ -210,10 +210,10 @@
 		// Tạo các phần tử wheel
 		const wheel = document.getElementById('wheel');
 		const colors = ['#013817', '#B6CCBE', '#376048', '#E8E6E3'];
-		const percentages = [15, 10, 15, 20, 10, 15, 10, 15, 10, 15, 10, 15, 10, 15, 10, 15, 10, 15, 10, 15, 10, 15, 20, 15, 10, 15, 20, 15, 10, 25];
+		const percentages = [15, 10, 15, 20, 10, 15, 10, 15, 10, 15, 10, 15, 10, 25, 10, 15, 10, 15, 10, 15, 10, 15, 20, 15, 10, 15, 20, 15, 10, 25];
 
 		for (let i = 0; i < 30; i++) {
-			if (i == 29) {
+			if (i==13 || i == 29) {
 				const number = document.createElement('div');
 				number.className = 'number';
 				number.style.setProperty('--i', i);
@@ -410,7 +410,7 @@
 						...indexesOf20.map(index => angleRanges[getRangeIndexFromPercentagesIndex(index)]),
 						...indexesOf25.map(index => angleRanges[getRangeIndexFromPercentagesIndex(index)])
 					];
-
+					console.log(rangesToAvoid);
 					// Kiểm tra xem góc cuối có nằm trong bất kỳ khoảng cần tránh nào không
 					const isInAvoidRange = rangesToAvoid.some(range =>
 						finalAngle >= range.start && finalAngle < range.end
