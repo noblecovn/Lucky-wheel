@@ -213,7 +213,7 @@
 		const percentages = [15, 10, 15, 20, 10, 15, 10, 15, 10, 15, 10, 15, 10, 25, 10, 15, 10, 15, 10, 15, 10, 15, 20, 15, 10, 15, 20, 15, 10, 25];
 
 		for (let i = 0; i < 30; i++) {
-			if (i==13 || i == 29) {
+			if (i == 13 || i == 29) {
 				const number = document.createElement('div');
 				number.className = 'number';
 				number.style.setProperty('--i', i);
@@ -360,89 +360,280 @@
 
 			spinCount++; // Tăng số lần quay
 
-			if (spinCount === winSpinNumber) {
-				// Tìm tất cả các index của giá trị 20%
-				const indexesOf20 = percentages.reduce((acc, value, index) => {
-					if (value === 20) acc.push(index);
-					return acc;
-				}, []);
-
-				// Lấy tất cả các khoảng góc tương ứng với các index của 20%
-				const rangesFor20 = indexesOf20.map(index => {
-					const rangeIndex = getRangeIndexFromPercentagesIndex(index);
-					return angleRanges[rangeIndex];
-				});
-
-				// Chọn ngẫu nhiên một trong các khoảng góc
-				const randomRange = rangesFor20[Math.floor(Math.random() * rangesFor20.length)];
-
-				// Tạo góc ngẫu nhiên trong khoảng đã chọn
-				const targetAngle = Math.floor(Math.random() * (randomRange.end - randomRange.start)) + randomRange.start;
-
-				// Thêm số vòng quay vào góc đích
-				value = (ROTATION_CYCLES * DEGREES_PER_CYCLE) + targetAngle;
-				console.log('Các vị trí 20%:', indexesOf20, 'Các khoảng góc:', rangesFor20, 'Khoảng được chọn:', randomRange, 'Góc quay:', value);
-				hasWon20Percent = true;
-			} else {
-				// Các lần quay khác sẽ không trúng 20%
-				let newValue;
-				do {
-					// Tạo góc ngẫu nhiên cho một vòng quay
-					const randomAngle = Math.ceil(Math.random() * 360);
-					// Thêm số vòng quay vào góc ngẫu nhiên
-					newValue = (ROTATION_CYCLES * DEGREES_PER_CYCLE) + randomAngle + value;
-					// Tính toán góc quay để tránh phần 20% và 25%
-					let finalAngle = (value + newValue) % 360;
-
-					// Tìm tất cả các index của giá trị 20% và 25%
+			function doSpin() {
+				if (spinCount === winSpinNumber) {
+					// Tìm tất cả các index của giá trị 20%
 					const indexesOf20 = percentages.reduce((acc, value, index) => {
 						if (value === 20) acc.push(index);
 						return acc;
 					}, []);
 
+					// Lấy tất cả các khoảng góc tương ứng với các index của 20%
+					const rangesFor20 = indexesOf20.map(index => {
+						const rangeIndex = getRangeIndexFromPercentagesIndex(index);
+						return angleRanges[rangeIndex];
+					});
+
+					// Chọn ngẫu nhiên một trong các khoảng góc
+					const randomRange = rangesFor20[Math.floor(Math.random() * rangesFor20.length)];
+
+					// Tạo góc ngẫu nhiên trong khoảng đã chọn
+					const targetAngle = Math.floor(Math.random() * (randomRange.end - randomRange.start)) + randomRange.start;
+
+					// Thêm số vòng quay vào góc đích
+					value = (ROTATION_CYCLES * DEGREES_PER_CYCLE) + targetAngle;
+					hasWon20Percent = true;
+				} else {
+					// Các lần quay khác sẽ không trúng 20% và 25%
+					let attempts = 0;
+					const maxAttempts = 100; // Giới hạn số lần thử để tránh vòng lặp vô hạn
+					let found = false;
+					while (attempts < maxAttempts) {
+						// Tạo góc ngẫu nhiên cho một vòng quay
+						const randomAngle = Math.ceil(Math.random() * 360);
+						// Thêm số vòng quay vào góc ngẫu nhiên
+						const newValue = (ROTATION_CYCLES * DEGREES_PER_CYCLE) + randomAngle + value;
+						// Tính toán góc cuối cùng
+						const finalAngle = newValue % 360;
+
+						// Tìm tất cả các index của giá trị 20% và 25%
+						const indexesOf20 = percentages.reduce((acc, value, index) => {
+							if (value === 20) acc.push(index);
+							return acc;
+						}, []);
+
+						const indexesOf25 = percentages.reduce((acc, value, index) => {
+							if (value === 25) acc.push(index);
+							return acc;
+						}, []);
+
+						// Lấy tất cả các khoảng góc tương ứng
+						const rangesToAvoid = [
+							...indexesOf20.map(index => angleRanges[getRangeIndexFromPercentagesIndex(index)]),
+							...indexesOf25.map(index => angleRanges[getRangeIndexFromPercentagesIndex(index)])
+						];
+
+						// Kiểm tra xem góc cuối có nằm trong bất kỳ khoảng cần tránh nào không
+						const isInAvoidRange = rangesToAvoid.some(range =>
+							finalAngle >= range.start && finalAngle < range.end
+						);
+						//Kiểm tra xem góc cuối có trong angleRanges không nếu không thì quay lại
+						const isInAngleRanges = angleRanges.some(range =>
+							finalAngle >= range.start && finalAngle < range.end
+						);
+						// Nếu không nằm trong khoảng cần tránh thì chấp nhận góc này
+						if (!isInAvoidRange && isInAngleRanges) {
+							value = newValue;
+							found = true;
+							break;
+						}
+
+						attempts++;
+					}
+
+					// Nếu không tìm được góc phù hợp sau maxAttempts lần thử
+					if (!found) {
+						// Chọn một góc ngẫu nhiên không phải 20% hoặc 25%
+						const safeAngles = Array.from({length: 360}, (_, i) => i).filter(angle => {
+							const percentage = getPrizePercentage(angle);
+							return percentage !== 20 && percentage !== 25;
+						});
+						
+						if (safeAngles.length > 0) {
+							const randomSafeAngle = safeAngles[Math.floor(Math.random() * safeAngles.length)];
+							value = (ROTATION_CYCLES * DEGREES_PER_CYCLE) + randomSafeAngle;
+						} else {
+							// Fallback: quay một góc ngẫu nhiên
+							value = (ROTATION_CYCLES * DEGREES_PER_CYCLE) + Math.ceil(Math.random() * 360);
+						}
+					}
+				}
+
+				wheel.style.transform = `rotate(${value}deg)`;
+
+				// Hiển thị popup sau khi quay xong
+				setTimeout(() => {
+					const finalAngle = value % 360;
+					const prizePercentage = getPrizePercentage(finalAngle);
+					if (prizePercentage > 0) 
+					{
+						showPopup(`🎉 Chúc mừng! Bạn đã trúng voucher giảm trực tiếp	 ${prizePercentage}% 🎉`);
+						// Kích hoạt lại nút quay sau khi quay xong
+						isSpinning = false;
+						spinBtn.style.pointerEvents = 'auto';
+						spinBtn.style.opacity = '1';
+					} 
+					else
+					{
+						// Nếu ra 0% thì tự động quay lại
+						doSpin();
+					}
+				}, 5000); // Đợi 5 giây để vòng quay dừng lại
+			}
+
+			doSpin();
+		};
+
+		// Hàm test vòng quay
+		function testWheelFixed() {
+			console.log('Bắt đầu test vòng quay...');
+			let testResults = {
+				totalSpins: 1000,
+				spinsWith20: 0,
+				spinsWith25: 0,
+				otherSpins: 0,
+				angles: [],
+				prizeStats: {}, // Thống kê số lần trúng từng phần trăm
+				angleStats: {}  // Thống kê số lần xuất hiện từng góc quay
+			};
+
+			let spinCount = 0;
+			let value = 0;
+			let validSpins = 0;
+
+			while (validSpins < testResults.totalSpins) {
+				// truyền validSpins + 1 thay cho spinCount
+				value = getNextSpinValue(value, validSpins + 1, winSpinNumber);
+				const finalAngle = value % 360;
+				const prizePercentage = getPrizePercentage(finalAngle);
+
+				if (prizePercentage === 0) continue;
+
+				testResults.angles.push({
+					spin: validSpins + 1,
+					angle: finalAngle,
+					prize: prizePercentage
+				});
+
+				// Thống kê số lần trúng từng phần trăm
+				if (!testResults.prizeStats[prizePercentage]) {
+					testResults.prizeStats[prizePercentage] = 1;
+				} else {
+					testResults.prizeStats[prizePercentage]++;
+				}
+
+				// Thống kê số lần xuất hiện từng góc quay
+				if (!testResults.angleStats[finalAngle]) {
+					testResults.angleStats[finalAngle] = 1;
+				} else {
+					testResults.angleStats[finalAngle]++;
+				}
+
+				if (prizePercentage === 20) {
+					testResults.spinsWith20++;
+				} else if (prizePercentage === 25) {
+					testResults.spinsWith25++;
+				} else {
+					testResults.otherSpins++;
+				}
+
+				validSpins++;
+			}
+
+			// In kết quả
+			console.log('=== Kết quả test ===');
+			console.log(`Tổng số lần quay: ${testResults.totalSpins}`);
+			console.log(`Số lần trúng 20%: ${testResults.spinsWith20}`);
+			console.log(`Số lần trúng 25%: ${testResults.spinsWith25}`);
+			console.log(`Số lần trúng các phần thưởng khác: ${testResults.otherSpins}`);
+
+			// In thống kê chi tiết số lần trúng từng phần trăm
+			console.log('--- Thống kê số lần trúng từng phần trăm ---');
+			Object.keys(testResults.prizeStats).sort((a, b) => Number(a) - Number(b)).forEach(prize => {
+				console.log(`Số lần trúng ${prize}%: ${testResults.prizeStats[prize]}`);
+			});
+
+			// In thống kê số lần xuất hiện từng góc quay
+			console.log('--- Thống kê số lần xuất hiện từng góc quay (0-359) ---');
+			Object.keys(testResults.angleStats).sort((a, b) => Number(a) - Number(b)).forEach(angle => {
+				console.log(`Góc ${angle}°: ${testResults.angleStats[angle]} lần`);
+			});
+
+			// Kiểm tra
+			if (testResults.spinsWith25 > 0) {
+				console.error('❌ Lỗi: Vẫn có lần quay trúng 25%!');
+			} else {
+				console.log('✅ Test thành công: Không có lần quay nào trúng 25%');
+			}
+			const winSpin = testResults.angles.find(result => result.spin === winSpinNumber);
+			if (winSpin && winSpin.prize === 20) {
+				console.log('✅ Test thành công: Lần quay thứ ' + winSpinNumber + ' trúng 20%');
+			} else {
+				console.error('❌ Lỗi: Lần quay thứ ' + winSpinNumber + ' không trúng 20%!');
+			}
+			return testResults;
+		}
+
+		// Thêm nút test vào giao diện
+		// const testButton = document.createElement('button');
+		// testButton.innerHTML = 'Test Vòng Quay';
+		// testButton.style.position = 'fixed';
+		// testButton.style.bottom = '20px';
+		// testButton.style.right = '20px';
+		// testButton.style.padding = '10px 20px';
+		// testButton.style.backgroundColor = '#013817';
+		// testButton.style.color = 'white';
+		// testButton.style.border = 'none';
+		// testButton.style.borderRadius = '5px';
+		// testButton.style.cursor = 'pointer';
+		// testButton.style.zIndex = '1000';
+		// testButton.onclick = testWheelFixed;
+		// document.body.appendChild(testButton);
+
+		function getNextSpinValue(currentValue, spinCount, winSpinNumber) {
+			if (spinCount === winSpinNumber) {
+				// Quay trúng 20%
+				const indexesOf20 = percentages.reduce((acc, value, index) => {
+					if (value === 20) acc.push(index);
+					return acc;
+				}, []);
+				const rangesFor20 = indexesOf20.map(index => {
+					const rangeIndex = getRangeIndexFromPercentagesIndex(index);
+					return angleRanges[rangeIndex];
+				});
+				const randomRange = rangesFor20[Math.floor(Math.random() * rangesFor20.length)];
+				const targetAngle = Math.floor(Math.random() * (randomRange.end - randomRange.start)) + randomRange.start;
+				return (ROTATION_CYCLES * DEGREES_PER_CYCLE) + targetAngle;
+			} else {
+				let attempts = 0;
+				const maxAttempts = 100;
+				while (attempts < maxAttempts) {
+					const randomAngle = Math.ceil(Math.random() * 360);
+					const newValue = (ROTATION_CYCLES * DEGREES_PER_CYCLE) + randomAngle + currentValue;
+					const finalAngle = newValue % 360;
+					const indexesOf20 = percentages.reduce((acc, value, index) => {
+						if (value === 20) acc.push(index);
+						return acc;
+					}, []);
 					const indexesOf25 = percentages.reduce((acc, value, index) => {
 						if (value === 25) acc.push(index);
 						return acc;
 					}, []);
-
-					// Lấy tất cả các khoảng góc tương ứng
 					const rangesToAvoid = [
 						...indexesOf20.map(index => angleRanges[getRangeIndexFromPercentagesIndex(index)]),
 						...indexesOf25.map(index => angleRanges[getRangeIndexFromPercentagesIndex(index)])
 					];
-					console.log(rangesToAvoid);
-					// Kiểm tra xem góc cuối có nằm trong bất kỳ khoảng cần tránh nào không
 					const isInAvoidRange = rangesToAvoid.some(range =>
 						finalAngle >= range.start && finalAngle < range.end
 					);
-
-					// Nếu không nằm trong khoảng cần tránh thì chấp nhận góc này
 					if (!isInAvoidRange) {
-						value = newValue;
-						break;
+						return newValue;
 					}
-				} while (true);
-			}
-
-			wheel.style.transform = `rotate(${value}deg)`;
-
-			// Hiển thị popup sau khi quay xong
-			setTimeout(() => {
-				const finalAngle = value % 360;
-				const prizePercentage = getPrizePercentage(finalAngle);
-				if (prizePercentage > 0) {
-					showPopup(`🎉 Chúc mừng! Bạn đã trúng voucher giảm trực tiếp	 ${prizePercentage}% 🎉`);
-				} else {
-					spinBtn.click();
+					attempts++;
 				}
-
-				// Kích hoạt lại nút quay sau khi quay xong
-				isSpinning = false;
-				spinBtn.style.pointerEvents = 'auto';
-				spinBtn.style.opacity = '1';
-			}, 5000); // Đợi 5 giây để vòng quay dừng lại
-		};
-
+				// Nếu không tìm được góc phù hợp
+				const safeAngles = Array.from({length: 360}, (_, i) => i).filter(angle => {
+					const percentage = getPrizePercentage(angle);
+					return percentage !== 20 && percentage !== 25;
+				});
+				if (safeAngles.length > 0) {
+					const randomSafeAngle = safeAngles[Math.floor(Math.random() * safeAngles.length)];
+					return (ROTATION_CYCLES * DEGREES_PER_CYCLE) + randomSafeAngle + currentValue;
+				} else {
+					return (ROTATION_CYCLES * DEGREES_PER_CYCLE) + Math.ceil(Math.random() * 360) + currentValue;
+				}
+			}
+		}
 	</script>
 </body>
 
