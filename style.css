@@ -1,0 +1,346 @@
+:root {
+	--size-wheel: 90vh;
+}
+
+html {
+	box-sizing: border-box;
+	height: 100%;
+	overflow: hidden;
+}
+
+body {
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+.msg {
+	min-height: 4rem;
+	font-family: Arial, Helvetica, sans-serif;
+	margin-top: 0.5rem;
+	text-transform: capitalize;
+}
+
+ul {
+	position: relative;
+	padding: 0;
+	width: var(--size-wheel);
+	height: var(--size-wheel);
+	border: 10px solid #013817;
+	border-radius: 50%;
+	list-style: none;
+	overflow: hidden;
+	transition: cubic-bezier(0.075, 0.8, 0.2, 1) 3s;
+}
+
+span {
+	display: inline-block;
+	position: relative;
+	padding: 0.5rem;
+}
+
+span::before {
+	content: '';
+	position: absolute;
+	top: -1.5rem;
+	left: 50%;
+	border-left: 2rem solid transparent;
+	border-right: 2rem solid transparent;
+	border-top: 4rem solid rgb(255, 217, 0);
+	z-index: 2;
+	transform: translateX(-50%);
+	/* animation: arrow ease-out 0.6s infinite; */
+}
+
+@keyframes arrow {
+	0% {
+		top: -2rem;
+	}
+	80% {
+		top: 0;
+	}
+	100% {
+		top: -1.5rem;
+	}
+}
+
+li {
+	overflow: hidden;
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 50%;
+	height: 50%;
+	transform-origin: 0% 100%;
+}
+
+.text {
+	font-family: Arial, Helvetica, sans-serif;
+	position: absolute;
+	left: -100%;
+	width: 200%;
+	height: 200%;
+	display: block;
+	text-align: center;
+	padding-top: 1.7rem;
+	font-weight: 600;
+	color: #fff;
+	font-size: 1.75rem;
+}
+
+.text > b {
+	display: inline-block;
+	word-break: break-word;
+	max-width: 20%;
+}
+
+.text-1 {
+	background-color: #013817;
+}
+
+.text-2 {
+	background-color: #B6CCBE;
+}
+
+.text-3 {
+	background-color: #E8E6E3;
+	color: red
+}
+.main {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+}
+
+.wheel-container {
+	position: relative;
+	cursor: pointer;
+}
+
+.wheel-container::after {
+	content: '';
+	width: 8rem;
+	height: 8rem;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background-color: rgb(255, 255, 255);
+	background-image: url('./assets/imgs/wheel.svg');
+	background-position: center;
+	background-repeat: no-repeat;
+	border-radius: 50%;
+	pointer-events: auto;
+	z-index: 10;
+}
+
+button {
+	display: inline-block;
+	text-align: center;
+	border: 0;
+	background-color: #333;
+	color: #fff;
+	font-size: 1.5rem;
+	border-radius: 4rem;
+	padding: 0.5rem 1.5rem;
+	width: auto;
+	cursor: pointer;
+	outline: none;
+}
+
+button:hover {
+	opacity: 0.8;
+}
+
+/* Popup kết quả */
+.popup {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0,0,0,0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+
+.popup-content {
+	background: #fff;
+	padding: 2rem 3rem;
+	border-radius: 1rem;
+	box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+	text-align: center;
+	min-width: 300px;
+}
+
+.popup-message {
+	font-size: 1.5rem;
+	margin-bottom: 1.5rem;
+	color: #222;
+}
+
+.popup-confirm {
+	background: #0059ff;
+	color: #fff;
+	border: none;
+	border-radius: 2rem;
+	padding: 0.7rem 2rem;
+	font-size: 1.2rem;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+
+.popup-confirm:hover {
+	background: #003fa3;
+}
+.result-board{
+	position: absolute;
+	top: 10vh;
+	right: 15vh;
+	background: #fff;
+	z-index: 1000;
+}
+.result-board table {
+    border-collapse: collapse;
+    width: 300px;
+    margin: 1rem auto;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    background: #f9f9f9;
+}
+
+.result-board th, .result-board td {
+    border: 1px solid #b6ccbe;
+    padding: 0.7rem 1rem;
+    text-align: center;
+}
+
+.result-board th {
+    background: #013817;
+    color: #fff;
+    font-weight: bold;
+}
+
+.result-board tr:nth-child(even) {
+    background: #e8e6e3;
+}
+
+.result-board tr:nth-child(odd) {
+    background: #fff;
+}
+
+.result-board h3 {
+    text-align: center;
+    margin-bottom: 0.5rem;
+    color: #013817;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+}
+
+.result-board--center {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2001;
+  background: #fff;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  border-radius: 1rem;
+  padding: 2.5rem 4rem;
+  min-width: 500px;
+  min-height: 350px;
+}
+.result-board--center table{
+	height: 100%;
+	width: 100%;
+}
+.result-board--center .result-table-body-index{
+	font-size: 2rem;
+}
+.result-board--center .result-table-body-value{
+	font-size: 2rem;
+}
+.overlay-result {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-board--center #close-result-board {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 2rem;
+  background: transparent;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  z-index: 2100;
+  transition: color 0.2s;
+}
+.result-board--center #close-result-board:hover {
+  color: #ff0000;
+}
+
+.popup-congrats {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  padding: 2.5rem 3.5rem 2rem 3.5rem;
+  min-width: 350px;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  animation: popup-congrats-in 0.3s;
+}
+@keyframes popup-congrats-in {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.popup-congrats-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #013817;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.popup-congrats-content {
+  font-size: 1.3rem;
+  color: #222;
+  text-align: center;
+}
+.close-popup-congrats {
+  position: absolute;
+  top: 10px;
+  right: 18px;
+  font-size: 2rem;
+  background: transparent;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  z-index: 2100;
+  transition: color 0.2s;
+}
+.close-popup-congrats:hover {
+  color: #ff0000;
+}
